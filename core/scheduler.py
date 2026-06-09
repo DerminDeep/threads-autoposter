@@ -46,7 +46,7 @@ class Scheduler:
         postId = post['id']
         content = post['content']
         topic = post.get('topic', '')
-        scheduled_time = post.get('scheduledTime')
+        scheduledTime = post.get('scheduledTime')
 
         try:
             if not await claimPost(postId):
