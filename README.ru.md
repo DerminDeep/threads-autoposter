@@ -29,7 +29,7 @@
 ### Вариант 1: Интерактивная настройка (Рекомендуется)
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/DerminDeep/threads-autoposter.git
 cd threads-autoposter
 pip install -r requirements.txt
 python main.py --setup
@@ -46,7 +46,7 @@ python main.py --setup
 ### Вариант 2: Ручная настройка
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/DerminDeep/threads-autoposter.git
 cd threads-autoposter
 pip install -r requirements.txt
 cp .env.example .env
@@ -105,7 +105,13 @@ threads-autoposter/
 
 ##### 2. Получите данные приложения
 
-В App Dashboard найдите **App ID** и **App Secret** (Settings > Basic). Добавьте в `.env`:
+В App Dashboard найдите **App ID** и **App Secret** (Settings > Basic). Вы можете настроить их:
+
+**Вариант A: Через CLI (Рекомендуется)**
+Запустите `python main.py --setup`, выберите Threads Settings и введите Meta App ID и App Secret когда будет предложено.
+
+**Вариант B: Ручное редактирование .env**
+Добавьте их в `.env`:
 
 ```env
 META_APP_ID=your_app_id

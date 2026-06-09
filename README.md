@@ -29,10 +29,10 @@ Automated posting system for [Threads](https://www.threads.net) (Meta) with AI-g
 ### Option 1: Interactive CLI Setup (Recommended)
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/DerminDeep/threads-autoposter.git
 cd threads-autoposter
 pip install -r requirements.txt
-python main.py
+python main.py --setup
 ```
 
 On first run, the interactive setup wizard will guide you through all configuration:
@@ -48,7 +48,7 @@ Navigate with arrow keys and Enter. No need to edit .env files manually!
 ### Option 2: Manual Configuration
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/DerminDeep/threads-autoposter.git
 cd threads-autoposter
 pip install -r requirements.txt
 cp .env.example .env
@@ -112,7 +112,13 @@ Uses Meta Graph API. Stable and reliable, requires a Meta Developer App.
 
 ##### 2. Get App Credentials
 
-In your App Dashboard, find **App ID** and **App Secret** (Settings > Basic). Add them to `.env`:
+In your App Dashboard, find **App ID** and **App Secret** (Settings > Basic). You can configure them:
+
+**Option A: Via CLI (Recommended)**
+Run `python main.py --setup`, select Threads Settings, and enter your Meta App ID and App Secret when prompted.
+
+**Option B: Manual .env edit**
+Add them to `.env`:
 
 ```env
 META_APP_ID=your_app_id

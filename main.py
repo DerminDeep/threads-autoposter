@@ -18,12 +18,10 @@ from utils.i18n import setLang
 
 
 def saveLang(lang: str):
-    """Save selected language to .lang file"""
     Path('.lang').write_text(lang, encoding='utf-8')
 
 
 def selectLanguage():
-    """Select language, load from file or ask user"""
     langPath = Path('.lang')
     if langPath.exists():
         savedLang = langPath.read_text(encoding='utf-8').strip()
@@ -51,7 +49,6 @@ def selectLanguage():
 
 
 def loadEnv():
-    """Load environment variables from .env file"""
     env = {}
     envPath = Path('.env')
     if envPath.exists():
@@ -65,7 +62,6 @@ def loadEnv():
 
 
 def validateConfig():
-    """Validate required configuration before starting bot"""
     from utils.i18n import t
     env = loadEnv()
 

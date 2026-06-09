@@ -68,7 +68,6 @@ async def getPendingPosts(limit: int = 10) -> List[dict]:
         return [dict(row) for row in rows]
 
 async def claimPost(postId: int) -> bool:
-    """Атомарно блокирует пост для публикации. Возвращает True если успешно."""
     async with aiosqlite.connect(DB_PATH) as db:
         cursor = await db.execute(
             'UPDATE posts SET status = ? WHERE id = ? AND status = ?',

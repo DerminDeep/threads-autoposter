@@ -72,7 +72,6 @@ class Scheduler:
             await updatePostStatus(postId, 'failed')
 
     async def _notifyPublished(self, postId: int, content: str, topic: str):
-        """Отправляет уведомление в Telegram о публикации запланированного поста"""
         try:
             from bot.tgbot import bot
             from config.settings import TELEGRAM_ADMIN_IDS
