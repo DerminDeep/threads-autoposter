@@ -1,0 +1,22 @@
+# Нормализация окончаний строк
+* text=auto eol=lf
+
+# Явные текстовые файлы
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Бинарные файлы
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.db binary
+*.sqlite binary
