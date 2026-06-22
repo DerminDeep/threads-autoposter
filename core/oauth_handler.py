@@ -1,5 +1,6 @@
 import httpx
 import webbrowser
+import secrets
 from urllib.parse import urlencode, parse_qs
 from config.settings import META_APP_ID, META_APP_SECRET, THREADS_REDIRECT_URI
 from utils.logger import logger
@@ -15,17 +16,25 @@ class OAuthHandler:
         self.app_id = META_APP_ID
         self.app_secret = META_APP_SECRET
         self.redirect_uri = THREADS_REDIRECT_URI
+        self._oauth_state = None
 
     def get_auth_url(self) -> str:
+        self._oauth_state = secrets.token_urlsafe(32)
         params = {
             "client_id": self.app_id,
             "redirect_uri": self.redirect_uri,
             "scope": "threads_basic,threads_content_publish,threads_manage_replies",
-            "response_type": "code"
+            "response_type": "code",
+            "state": self._oauth_state
         }
         auth_url = f"{self.AUTH_URL}?{urlencode(params)}"
-        logger.info(f"Generated OAuth URL: {auth_url}")
+        logger.info("Generated OAuth URL with CSRF state token")
         return auth_url
+
+    def validate_state(self, state: str) -> bool:
+        if not self._oauth_state or not state:
+            return False
+        return secrets.compare_digest(self._oauth_state, state)
 
     def open_auth_browser(self):
         auth_url = self.get_auth_url()
@@ -58,8 +67,6 @@ class OAuthHandler:
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error exchanging code for token: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                logger.error(f"Response body: {e.response.text}")
             return None
         except Exception as e:
             logger.error(f"Error exchanging code for token: {e}")
@@ -88,8 +95,6 @@ class OAuthHandler:
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error exchanging for long-lived token: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                logger.error(f"Response body: {e.response.text}")
             return None
         except Exception as e:
             logger.error(f"Error exchanging for long-lived token: {e}")
@@ -139,8 +144,6 @@ class OAuthHandler:
 
         except httpx.HTTPError as e:
             logger.error(f"HTTP error fetching user ID: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                logger.error(f"Response body: {e.response.text}")
             return None
         except Exception as e:
             logger.error(f"Error fetching user ID: {e}")

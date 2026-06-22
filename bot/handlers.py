@@ -118,11 +118,13 @@ async def startOAuthCallbackServer():
     import os
 
     auth_code = None
+    auth_state = None
     auth_event = asyncio.Event()
 
     async def handle_callback(request):
-        nonlocal auth_code
+        nonlocal auth_code, auth_state
         auth_code = request.query.get('code')
+        auth_state = request.query.get('state')
         if auth_code:
             auth_event.set()
             return web.Response(text=t('bot', 'oauth_callback_success'))
@@ -138,14 +140,14 @@ async def startOAuthCallbackServer():
     site = web.TCPSite(runner, 'localhost', 8080)
     await site.start()
 
-    return runner, auth_event, lambda: auth_code
+    return runner, auth_event, lambda: auth_code, lambda: auth_state
 
 
 async def saveOauthTokensToDb(userId: str, accessToken: str):
     from database.models import setSetting
     await setSetting('threads_user_id', userId)
     await setSetting('threads_access_token', accessToken)
-    logger.info(f"OAuth tokens saved to database for user {userId}")
+    logger.info("OAuth tokens saved to database")
 
 
 async def sendMainMenu(message: Message):
@@ -166,6 +168,8 @@ async def startCommand(message: Message):
 @router.callback_query(F.data == "menu_back")
 async def menuBackCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     await callback.message.edit_text(
         t('bot', 'welcome'),
@@ -177,6 +181,8 @@ async def menuBackCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_post")
 async def menuPostCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     await callback.message.answer(t('bot', 'post_enter_topic'), reply_markup=getBackButton())
     await state.set_state(PostStates.waitingTopic)
@@ -185,6 +191,8 @@ async def menuPostCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_schedule")
 async def menuScheduleCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     await callback.message.answer(t('bot', 'schedule_enter_topic'), reply_markup=getBackButton())
     await state.set_state(ScheduleStates.waitingTopic)
@@ -193,6 +201,8 @@ async def menuScheduleCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_queue")
 async def menuQueueCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     posts = await getPendingPosts(limit=20)
     if not posts:
@@ -209,6 +219,8 @@ async def menuQueueCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_login")
 async def menuLoginCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     await callback.message.answer(t('bot', 'menu_login'), reply_markup=getBackButton())
 
@@ -216,6 +228,8 @@ async def menuLoginCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_persona")
 async def menuPersonaCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     from pathlib import Path
     personaPath = Path('config/prompts/persona.md')
@@ -242,6 +256,8 @@ async def menuPersonaCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "persona_edit")
 async def personaEditCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     from pathlib import Path
     personaPath = Path('config/prompts/persona.md')
 
@@ -263,6 +279,8 @@ async def personaEditCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "persona_mode:append")
 async def personaAppendMode(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     data = await state.get_data()
     currentContent = data.get('currentContent', '')
 
@@ -278,6 +296,8 @@ async def personaAppendMode(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "persona_mode:replace")
 async def personaReplaceMode(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await callback.message.answer(t('bot', 'persona_edit_prompt'))
     await state.update_data(mode='replace')
     await state.set_state(PersonaStates.waitingEdit)
@@ -312,6 +332,8 @@ async def processPersonaEdit(message: Message, state: FSMContext):
 @router.callback_query(F.data == "menu_skills")
 async def menuSkillsCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     from pathlib import Path
     from config.settings import AI_SKILLS_DIR
@@ -345,6 +367,8 @@ async def menuSkillsCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_topics")
 async def menuTopicsCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     topics = await getTopics()
     if not topics:
@@ -395,6 +419,8 @@ def _buildSettingsText() -> str:
 @router.callback_query(F.data == "menu_stats")
 async def menuStatsCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     stats = await getStats()
     text = _buildStatsText(stats)
@@ -404,6 +430,8 @@ async def menuStatsCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_settings")
 async def menuSettingsCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     text = _buildSettingsText()
     await callback.message.answer(text, parse_mode='Markdown', reply_markup=getBackButton())
@@ -412,6 +440,8 @@ async def menuSettingsCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_help")
 async def menuHelpCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        return
     await state.clear()
     await callback.message.answer(t('bot', 'menu_help'), parse_mode='Markdown', reply_markup=getBackButton())
 
@@ -521,7 +551,7 @@ async def startOAuthFlow(message: Message, state: FSMContext):
 
     runner = None
     try:
-        runner, auth_event, get_code = await startOAuthCallbackServer()
+        runner, auth_event, get_code, get_state = await startOAuthCallbackServer()
         auth_url = oauth_handler.get_auth_url()
         webbrowser.open(auth_url)
 
@@ -535,6 +565,13 @@ async def startOAuthFlow(message: Message, state: FSMContext):
             return
 
         auth_code = get_code()
+        callback_state = get_state()
+
+        if not oauth_handler.validate_state(callback_state):
+            await message.answer(t('bot', 'oauth_error', 'CSRF state mismatch'))
+            logger.warning('OAuth CSRF state validation failed')
+            await state.clear()
+            return
 
         if not auth_code:
             await message.answer(t('bot', 'oauth_no_code'))
@@ -562,7 +599,7 @@ async def startOAuthFlow(message: Message, state: FSMContext):
             return
 
         await saveOauthTokensToDb(user_id, long_lived_token)
-        logger.success(f"OAuth tokens saved for user {user_id}")
+        logger.success(f"OAuth tokens saved for user")
 
         await message.answer(t('bot', 'oauth_success_msg', user_id), parse_mode='Markdown')
         await state.clear()
@@ -1086,6 +1123,9 @@ async def processScheduleTime(message: Message, topic: str, timeStr: str, state:
 @router.callback_query(F.data.startswith("schedule_approve_"))
 async def scheduleApproveCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        await callback.message.edit_text(t('bot', 'access_denied'))
+        return
     postId = callback.data.replace("schedule_approve_", "")
     postData = _pendingPosts.get(postId)
 
@@ -1120,6 +1160,9 @@ async def scheduleApproveCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith("schedule_edit_"))
 async def scheduleEditCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        await callback.message.edit_text(t('bot', 'access_denied'))
+        return
     postId = callback.data.replace("schedule_edit_", "")
     postData = _pendingPosts.get(postId)
     currentText = postData.get('content', '') if postData else ''
@@ -1163,6 +1206,9 @@ async def processScheduleEdit(message: Message, state: FSMContext):
 @router.callback_query(F.data.startswith("schedule_cancel_"))
 async def scheduleCancelCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        await callback.message.edit_text(t('bot', 'access_denied'))
+        return
     postId = callback.data.replace("schedule_cancel_", "")
 
     if postId in _pendingPosts:
