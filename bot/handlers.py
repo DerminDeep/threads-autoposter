@@ -519,6 +519,7 @@ async def startOAuthFlow(message: Message, state: FSMContext):
     oauth_handler = OAuthHandler()
     await message.answer(t('bot', 'oauth_start'), parse_mode='Markdown')
 
+    runner = None
     try:
         runner, auth_event, get_code = await startOAuthCallbackServer()
         auth_url = oauth_handler.get_auth_url()
@@ -529,13 +530,11 @@ async def startOAuthFlow(message: Message, state: FSMContext):
         try:
             await asyncio.wait_for(auth_event.wait(), timeout=300)
         except asyncio.TimeoutError:
-            await runner.cleanup()
             await message.answer(t('bot', 'oauth_timeout'))
             await state.clear()
             return
 
         auth_code = get_code()
-        await runner.cleanup()
 
         if not auth_code:
             await message.answer(t('bot', 'oauth_no_code'))
@@ -572,6 +571,9 @@ async def startOAuthFlow(message: Message, state: FSMContext):
         logger.error(f'OAuth flow error: {e}')
         await message.answer(t('bot', 'oauth_error', str(e)))
         await state.clear()
+    finally:
+        if runner:
+            await runner.cleanup()
 
 
 async def startBrowserLogin(message: Message, state: FSMContext):
@@ -877,6 +879,9 @@ async def processPostGeneration(message: Message, topic: str, state: FSMContext)
 @router.callback_query(F.data.startswith("approve_"))
 async def approvePostCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        await callback.message.edit_text(t('bot', 'access_denied'))
+        return
     postId = callback.data.replace("approve_", "")
     postData = _pendingPosts.get(postId)
 
@@ -917,6 +922,9 @@ async def approvePostCallback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith("edit_"))
 async def editPostCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        await callback.message.edit_text(t('bot', 'access_denied'))
+        return
     postId = callback.data.replace("edit_", "")
     postData = _pendingPosts.get(postId)
     currentText = postData.get('content', '') if postData else ''
@@ -964,6 +972,9 @@ async def processEditedPost(message: Message, state: FSMContext):
 @router.callback_query(F.data.startswith("cancel_"))
 async def cancelPostCallback(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
+    if not isAuthorized(callback.from_user.id):
+        await callback.message.edit_text(t('bot', 'access_denied'))
+        return
     postId = callback.data.replace("cancel_", "")
 
     if postId in _pendingPosts:

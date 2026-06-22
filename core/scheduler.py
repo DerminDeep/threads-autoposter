@@ -61,7 +61,7 @@ class Scheduler:
                 await updatePostStatus(postId, 'published', threadsPostId)
                 logger.success(f'Post {postId} published: {threadsPostId}')
 
-                if scheduled_time:
+                if scheduledTime:
                     await self._notifyPublished(postId, content, topic)
             else:
                 await updatePostStatus(postId, 'failed')

@@ -8,7 +8,23 @@ from config.settings import CLOAKBROWSER_CDP_URL
 
 _browserProcess = None
 
-CLOAKBROWSER_CLI = Path(r"C:\Users\user\AppData\Local\Programs\Python\Python312\Scripts\cloakbrowser.exe")
+import shutil
+import sys
+
+# Auto-detect cloakbrowser CLI location
+_cloakbrowser_in_path = shutil.which('cloakbrowser')
+if _cloakbrowser_in_path:
+    CLOAKBROWSER_CLI = Path(_cloakbrowser_in_path)
+elif sys.platform == 'win32':
+    _candidates = [
+        Path(sys.executable).parent / 'Scripts' / 'cloakbrowser.exe',
+        Path(sys.executable).parent / 'cloakbrowser.exe',
+        Path.home() / 'AppData' / 'Local' / 'Programs' / 'Python' / f'Python{sys.version_info.major}{sys.version_info.minor}' / 'Scripts' / 'cloakbrowser.exe',
+    ]
+    CLOAKBROWSER_CLI = next((p for p in _candidates if p.exists()), _candidates[0])
+else:
+    CLOAKBROWSER_CLI = Path.home() / '.local' / 'bin' / 'cloakbrowser'
+
 CLOAKBROWSER_INSTALL_DIR = Path.home() / ".cloakbrowser"
 CLOAKBROWSER_GITHUB_URL = "https://github.com/CloakHQ/CloakBrowser/releases/latest/download/CloakBrowser.exe"
 

@@ -176,6 +176,8 @@ translations = {
             'post_edit_prompt': '✏️ Скопируй текст ниже, отредактируй и отправь обратно:\n\n(Или /cancel для отмены)',
             'post_edited_preview': '📝 *Отредактированный пост:*',
             'post_cancelled': '❌ Пост отменен.',
+            'web_context_header': 'Доступный контекст из интернета (используй если релевантно):',
+            'scheduled_post_published': '✅ *Запланированный пост опубликован!*\n\n*Тема:* {topic}\n*ID поста:* {postId}\n\n*Содержание:*\n{content}',
 
             'schedule_enter_topic': '📝 Введите тему для поста:',
             'schedule_enter_time': '⏰ Введите время публикации (ЧЧ:ММ):',
@@ -562,6 +564,8 @@ translations = {
             'post_edit_prompt': '✏️ Send new post text:\n\n(Or /cancel to cancel)',
             'post_edited_preview': '📝 *Edited post:*',
             'post_cancelled': '❌ Post cancelled.',
+            'web_context_header': 'Available context from the web (use if relevant):',
+            'scheduled_post_published': '✅ *Scheduled post published!*\n\n*Topic:* {topic}\n*Post ID:* {postId}\n\n*Content:*\n{content}',
 
 
             'schedule_enter_topic': '📝 Enter post topic:',

@@ -14,28 +14,25 @@ class ThreadsPublisher(ABC):
 
 class APIPublisher(ThreadsPublisher):
     def __init__(self):
-        self.userId = None
-        self.accessToken = None
         self.baseUrl = THREADS_API_BASE
 
     async def publish(self, content: str, imagePath: Optional[str] = None) -> Optional[str]:
-        if not self.userId or not self.accessToken:
-            from database.models import getSetting
-            self.userId = await getSetting('threads_user_id')
-            self.accessToken = await getSetting('threads_access_token')
+        from database.models import getSetting
+        userId = await getSetting('threads_user_id')
+        accessToken = await getSetting('threads_access_token')
 
-            if not self.userId or not self.accessToken:
-                logger.error('OAuth tokens not found. Use /login to authorize via OAuth first')
-                return None
+        if not userId or not accessToken:
+            logger.error('OAuth tokens not found. Use /login to authorize via OAuth first')
+            return None
 
         try:
             async with httpx.AsyncClient() as client:
                 containerResponse = await client.post(
-                    f'{self.baseUrl}/{self.userId}/threads',
+                    f'{self.baseUrl}/{userId}/threads',
                     data={
                         'media_type': 'TEXT',
                         'text': content,
-                        'access_token': self.accessToken
+                        'access_token': accessToken
                     },
                     timeout=30.0
                 )
@@ -50,10 +47,10 @@ class APIPublisher(ThreadsPublisher):
                     return None
 
                 publishResponse = await client.post(
-                    f'{self.baseUrl}/{self.userId}/threads_publish',
+                    f'{self.baseUrl}/{userId}/threads_publish',
                     data={
                         'creation_id': containerId,
-                        'access_token': self.accessToken
+                        'access_token': accessToken
                     },
                     timeout=30.0
                 )

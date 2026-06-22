@@ -42,6 +42,6 @@ class ContentGenerator:
                 web_context = f"\nДоступный контекст из интернета (используй если релевантно):\n{search_results}"
                 logger.info("Получен контекст из интернета")
         except Exception as e:
-            logger.debug(f"MCP недоступен: {e}")
+            logger.debug(f"MCP unavailable: {e}")
 
         return await self.provider.generatePost(topic, style, web_context)

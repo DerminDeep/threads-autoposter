@@ -96,6 +96,8 @@ async def shutdown():
     await scheduler.stop()
     await bot.stop()
     await shutdownBrowser()
+    from core.mcp_client import mcpManager
+    await mcpManager.stop_all()
     logger.info('Shutdown complete')
 
 async def main():
@@ -105,6 +107,15 @@ async def main():
     logger.info('Starting Threads AutoPoster...')
     await initDb()
     logger.info('Database initialized')
+
+    # Load and start MCP servers for web search
+    from core.mcp_client import mcpManager
+    await mcpManager.load_servers()
+    if mcpManager.servers:
+        logger.info(f'MCP servers loaded: {", ".join(mcpManager.servers.keys())}')
+    else:
+        logger.info('No MCP servers configured (web search will be unavailable)')
+
     await scheduler.start()
 
     stopEvent = asyncio.Event()
